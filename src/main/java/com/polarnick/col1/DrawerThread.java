@@ -74,7 +74,7 @@ public class DrawerThread extends Thread {
 
     private void addPoint(int x, int y) {
         int index = y * WIDTH + x;
-        while (wasBlocked[index]) {
+        if (!wasBlocked[index]) {
             Point p = new Point(index, false);
             points.add(p);
             ++pointsCount[index];
