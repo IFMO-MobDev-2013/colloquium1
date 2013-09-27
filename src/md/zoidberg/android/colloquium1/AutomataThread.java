@@ -153,7 +153,7 @@ public class AutomataThread extends Thread {
     }
 
     private void redrawScreen(Canvas screen) {
-        // Finding out colours
+        if (screen == null) return;
         for (int y = 0; y < fieldHeight; y++) {
             for (int x = 0; x < fieldWidth; x++) {
                 colors[y* fieldWidth + x] = palette[field[y][x] + 1];
@@ -163,7 +163,6 @@ public class AutomataThread extends Thread {
 
         screen.drawBitmap(colors, 0, fieldWidth, 0.0F, 0.0F, fieldWidth, fieldHeight, false, null);
 
-        // Now for FPS counting. I'm averaging over last 10 frames.
         long timeDelta = System.nanoTime() - startTime;
         float fps = lastFrame * 1000000000.0f/timeDelta; // dragons ahoy! 10^9 nanoseconds
 
