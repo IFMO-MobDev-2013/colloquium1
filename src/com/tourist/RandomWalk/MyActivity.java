@@ -177,23 +177,23 @@ public class MyActivity extends Activity {
         }
 
         public void add1000() {
-            if (whiteCount == whiteSize) {
-                return;
-            }
-            for (int i = whiteCount; i < whiteCount + 1000; i++) {
+            for (int i = 0; i < 1000; i++) {
+                if (whiteCount == whiteSize) {
+                    return;
+                }
                 do {
-                    white[i].x = rnd.nextInt(width);
-                    white[i].y = rnd.nextInt(height);
-                } while (field[white[i].y * width + white[i].x] == 0xFF0000);
+                    white[whiteCount].x = rnd.nextInt(width);
+                    white[whiteCount].y = rnd.nextInt(height);
+                } while (field[white[whiteCount].y * width + white[whiteCount].x] == 0xFF0000);
+                whiteCount++;
             }
-            whiteCount += 1000;
         }
 
         public void remove1000() {
-            if (whiteCount == 0) {
-                return;
-            }
             for (int i = 0; i < 1000; i++) {
+                if (whiteCount == 0) {
+                    return;
+                }
                 int x = rnd.nextInt(whiteCount);
                 field[white[x].y * width + white[x].x] = 0;
                 white[x] = white[whiteCount - 1];
