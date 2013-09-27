@@ -19,46 +19,45 @@ public class DrawerThread extends Thread {
     private final static int THREAD_COUNT = Runtime.getRuntime().availableProcessors() + 1;
     private final static int FIELD_UPDATER_COUNT = THREAD_COUNT;
 
-    private final static int FOOTER_HEIGHT = 128;
+    private final static int HEADER_HEIGHT = 128;
     //Default:     240 x 320
     //Xperia Sola: 480 x 854
     //Galaxy S3:   720 x 1280
     private final static int WIDTH = HelloAndroidActivity.getScreenWidth();
-    private final static int HEIGHT = HelloAndroidActivity.getScreenHeight() - FOOTER_HEIGHT;
+    private final static int HEIGHT = HelloAndroidActivity.getScreenHeight() - HEADER_HEIGHT;
 
-    private static final int UPDATE_FPS_AFTER_MS = 239;
     private static final int MS_IN_SECOND = 1000;
+
     private static final Paint FPS_COLOR_TEXT = new Paint();
 
     private static final float TEXT_SIZE = 30f;
     private static final int TEXT_ALPHA = 255;
 
     private static final int TEXT_OFFSET_X = 15;
-    private static final int TEXT_OFFSET_Y = 35;
+    private static final int TEXT_OFFSET_Y = 35 + HEADER_HEIGHT;
 
     private final static Random random = new Random();
 
     public static final int POINT_COLOUR = Color.WHITE;
     public static final int BACKGROUND_COLOUR = Color.BLACK;
+    public static final int FIXED_POINTS_COLOUR = Color.RED;
 
     private final Profiler<WhirlViewFunctions> profiler = new Profiler<WhirlViewFunctions>(this.getClass());
 
     private final ExecutorService pool = Executors.newFixedThreadPool(THREAD_COUNT);
     private final List<FieldUpdater> updaters = new ArrayList<FieldUpdater>(FIELD_UPDATER_COUNT);
 
-    private int[] field = new int[WIDTH * HEIGHT];
-    private boolean[] wasBlocked = new boolean[WIDTH * HEIGHT];
-    private boolean[] willBlocked = new boolean[WIDTH * HEIGHT];
-    private int[] pointsCount = new int[WIDTH * HEIGHT];
-    private Queue<Point> points = new ConcurrentLinkedQueue<Point>();
+    private int[] field;
+    private boolean[] wasBlocked;
+    private boolean[] willBlocked;
+    private int[] pointsCount;
+    private Queue<Point> points;
 
     private boolean runFlag;
 
     public DrawerThread(SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
-        initFieldUpdaters();
         initStartState();
-        addPoints(1000);
     }
 
     private void addPoints(int count) {
@@ -73,14 +72,32 @@ public class DrawerThread extends Thread {
         }
     }
 
+    private void addPoint(int x, int y) {
+        int index = y * WIDTH + x;
+        while (wasBlocked[index]) {
+            Point p = new Point(index, false);
+            points.add(p);
+            ++pointsCount[index];
+            field[index] = POINT_COLOUR;
+        }
+    }
+
     private void initStartState() {
+        wasBlocked = new boolean[WIDTH * HEIGHT];
+        willBlocked = new boolean[WIDTH * HEIGHT];
+        pointsCount = new int[WIDTH * HEIGHT];
+        field = new int[WIDTH * HEIGHT];
+        points = new ConcurrentLinkedQueue<Point>();
+
+        initFieldUpdaters();
+
         final int index = HEIGHT / 2 * WIDTH + WIDTH / 2;
         wasBlocked[index] = true;
         ++pointsCount[index];
-        field[index] = POINT_COLOUR;
 
         Arrays.fill(field, BACKGROUND_COLOUR);
-        field[index] = POINT_COLOUR;
+        field[index] = FIXED_POINTS_COLOUR;
+        addPoints(5000);
     }
 
     private void initFieldUpdaters() {
@@ -123,6 +140,20 @@ public class DrawerThread extends Thread {
     }
 
     private void update(final Canvas canvas) {
+        if (touched) {
+            if (y > HEADER_HEIGHT) {
+                addPoint((int) x, (int) y - HEADER_HEIGHT);
+            } else {
+                if (x < WIDTH / 3) {
+                    addPoints(1000);
+                } else if (x < 2 * WIDTH / 3) {
+                    removePoints(1000);
+                } else {
+                    initStartState();
+                }
+            }
+            touched = false;
+        }
         final CountDownLatch counter = new CountDownLatch(THREAD_COUNT);
         for (FieldUpdater updater : updaters) {
             updater.setCounter(counter);
@@ -145,6 +176,22 @@ public class DrawerThread extends Thread {
         updateData();
     }
 
+    private void removePoints(int count) {
+        Iterator<Point> iterator = points.iterator();
+        while (count > 0 && iterator.hasNext()) {
+            Point p = iterator.next();
+            if (!p.isWasFixed() && !p.isNowFixed()) {
+                iterator.remove();
+                int index = p.getIndex();
+                this.pointsCount[index]--;
+                if (this.pointsCount[index] == 0) {
+                    field[index] = BACKGROUND_COLOUR;
+                }
+                count--;
+            }
+        }
+    }
+
     private void updateData() {
         Iterator<Point> iterator = points.iterator();
         while (iterator.hasNext()) {
@@ -152,7 +199,9 @@ public class DrawerThread extends Thread {
             if (p.isNowFixed()) {
                 wasBlocked[p.getIndex()] = true;
                 iterator.remove();
-                p.updateBlockedState();
+                if (p.updateBlockedState()) {
+                    field[p.getIndex()] = FIXED_POINTS_COLOUR;
+                }
             }
         }
 
@@ -169,30 +218,43 @@ public class DrawerThread extends Thread {
         }
     }
 
-    private long fps;
-
-    private long frameStart = System.currentTimeMillis();
-    private long frames;
+    private long fpsOverall = 0;
+    private final long appStart = System.currentTimeMillis();
 
     static {
-        FPS_COLOR_TEXT.setARGB(TEXT_ALPHA, 100, 100, 255);
+        FPS_COLOR_TEXT.setARGB(TEXT_ALPHA, 200, 255, 200);
         FPS_COLOR_TEXT.setTextSize(TEXT_SIZE);
     }
+
+    final int dxButton = 30;
+    final int dyButton = 30;
 
     private void renderFieldBitmap(int[] colors, Canvas canvas) {
         profiler.in(WhirlViewFunctions.renderFieldBitmap);
         canvas.scale(1f * HelloAndroidActivity.getScreenWidth() / WIDTH,
-                1f * (HelloAndroidActivity.getScreenHeight() - FOOTER_HEIGHT) / HEIGHT);
-        canvas.drawBitmap(colors, 0, WIDTH, 0, 0, WIDTH, HEIGHT, false, null);
-        final long delta = System.currentTimeMillis() - frameStart;
-        frames++;
-        if (delta > UPDATE_FPS_AFTER_MS) {
-            fps = (frames * MS_IN_SECOND / delta);
-            frameStart = System.currentTimeMillis();
-            frames = 0;
-        }
-        canvas.drawText(fps + " FPS", TEXT_OFFSET_X, TEXT_OFFSET_Y, FPS_COLOR_TEXT);
+                1f * (HelloAndroidActivity.getScreenHeight() - HEADER_HEIGHT) / HEIGHT);
+        canvas.drawBitmap(colors, 0, WIDTH, 0, HEADER_HEIGHT, WIDTH, HEIGHT, false, null);
+        ++fpsOverall;
+        canvas.drawText((fpsOverall * MS_IN_SECOND / (System.currentTimeMillis() - appStart)) + " FPS", TEXT_OFFSET_X, TEXT_OFFSET_Y, FPS_COLOR_TEXT);
+        canvas.drawText("+1000", dxButton, dyButton, FPS_COLOR_TEXT);
+        canvas.drawText("-1000", WIDTH / 3 + dxButton, dyButton, FPS_COLOR_TEXT);
+        canvas.drawText("reset", 2 * WIDTH / 3 + dxButton, dyButton, FPS_COLOR_TEXT);
+        canvas.drawLine(WIDTH / 3, 0, WIDTH / 3, HEADER_HEIGHT, FPS_COLOR_TEXT);
+        canvas.drawLine(2 * WIDTH / 3, 0, 2 * WIDTH / 3, HEADER_HEIGHT, FPS_COLOR_TEXT);
+        canvas.drawLine(0, HEADER_HEIGHT - 1, WIDTH, HEADER_HEIGHT - 1, FPS_COLOR_TEXT);
         profiler.out(WhirlViewFunctions.renderFieldBitmap);
+    }
+
+    boolean touched;
+    float x;
+    float y;
+
+    public void onTouched(float x, float y) {
+        if (!touched) {
+            touched = true;
+            this.x = x;
+            this.y = y;
+        }
     }
 
     private enum WhirlViewFunctions {

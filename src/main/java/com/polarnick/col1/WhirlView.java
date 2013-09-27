@@ -1,6 +1,7 @@
 package com.polarnick.col1;
 
 import android.content.Context;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -23,6 +24,17 @@ class WhirlView extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            float x = event.getRawX();
+            float y = event.getRawY();
+            drawerThread.onTouched(x, y);
+            return true;
+        }
+        return false;
     }
 
     @Override

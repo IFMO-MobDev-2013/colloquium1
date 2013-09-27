@@ -46,7 +46,13 @@ public class Point {
         this.nowFixed = nowFixed;
     }
 
-    public void updateBlockedState() {
-        wasFixed = nowFixed;
+    public boolean updateBlockedState() {
+        if (!wasFixed && nowFixed) {
+            wasFixed = nowFixed;
+            return true;
+        } else {
+            wasFixed = nowFixed;
+            return false;
+        }
     }
 }
