@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.example.MyActivity.MySurfaceView
+            android:layout_alignParentLeft="true" android:layout_alignParentTop="true" android:layout_width="fill_parent"
+            android:layout_height="wrap_content" android:layout_above="@+id/linearLayout">
+    </com.example.MyActivity.MySurfaceView>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true" android:layout_alignParentBottom="true"
+            android:id="@+id/linearLayout">
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onAddButton"
+                android:text="+1000"/>
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onDelButton"
+                android:text="-1000"/>
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onDefButton"
+                android:text="Def"/>
+    </LinearLayout>
+</RelativeLayout>
