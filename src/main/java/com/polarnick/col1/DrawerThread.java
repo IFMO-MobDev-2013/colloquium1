@@ -72,13 +72,13 @@ public class DrawerThread extends Thread {
         }
     }
 
-    private void addPoint(int x, int y) {
+    private void addFixPoint(int x, int y) {
         int index = y * WIDTH + x;
         if (!wasBlocked[index]) {
-            Point p = new Point(index, false);
-            points.add(p);
             ++pointsCount[index];
-            field[index] = POINT_COLOUR;
+            field[index] = FIXED_POINTS_COLOUR;
+            wasBlocked[index] = true;
+            willBlocked[index] = true;
         }
     }
 
@@ -142,7 +142,7 @@ public class DrawerThread extends Thread {
     private void update(final Canvas canvas) {
         if (touched) {
             if (y > HEADER_HEIGHT) {
-                addPoint((int) x, (int) y - HEADER_HEIGHT);
+                addFixPoint((int) x, (int) y - HEADER_HEIGHT);
             } else {
                 if (x < WIDTH / 3) {
                     addPoints(1000);
