@@ -11,14 +11,14 @@
             android:layout_weight="1"/>
     <LinearLayout android:orientation="horizontal"
                   android:layout_height="wrap_content"
-                  android:layout_width="wrap_content"
+                  android:layout_width="match_parent"
             >
-        <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/add"
+        <Button android:layout_width="wrap_content" android:layout_height="match_parent" android:id="@+id/add"
                 android:focusable="false" android:text="@string/add" android:singleLine="true" android:onClick="onPress" />
-        <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/remove"
+        <Button android:layout_width="wrap_content" android:layout_height="match_parent" android:id="@+id/remove"
                 android:focusable="false" android:text="@string/remove" android:singleLine="true"
                 android:layout_gravity="center_horizontal|top" android:onClick="onPress"/>
-        <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/reset"
+        <Button android:layout_width="wrap_content" android:layout_height="match_parent" android:id="@+id/reset"
                 android:focusable="false" android:text="@string/reset" android:singleLine="true"
                 android:layout_gravity="center_horizontal|top" android:onClick="onPress"/>
     </LinearLayout>

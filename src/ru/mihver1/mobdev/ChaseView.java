@@ -2,6 +2,7 @@ package ru.mihver1.mobdev;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -13,7 +14,7 @@ import android.view.SurfaceView;
  * To change this template use File | Settings | File Templates.
  */
 public class ChaseView extends SurfaceView implements SurfaceHolder.Callback {
-    private Drawer drawer;
+    public Drawer drawer;
 
     public ChaseView(Context context) {
         super(context);
@@ -31,6 +32,20 @@ public class ChaseView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN){
+            int x = (int) event.getX();
+            int y = (int) event.getY();
+            Pnt t = new Pnt(x, y);
+            t.fixed = true;
+            drawer.hasFixed[x][y] = true;
+            //drawer.fixedNum++;
+            drawer.list.add(t);
+        }
+        return super.onTouchEvent(event);
+    }
+
+    @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
     }
@@ -41,6 +56,8 @@ public class ChaseView extends SurfaceView implements SurfaceHolder.Callback {
         drawer.setRunning(true);
         drawer.start();
     }
+
+
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {

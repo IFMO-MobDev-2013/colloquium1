@@ -18,13 +18,16 @@ public class Chase extends Activity {
     }
 
     public void onPress(View view) {
+        ChaseView v = (ChaseView)findViewById(R.id.chaseView);
         switch (view.getId()) {
             case R.id.add:
-
+                v.drawer.add(1000);
                 break;
             case R.id.remove:
+                v.drawer.add(-1000);
                 break;
             case R.id.reset:
+                v.drawer.reset();
                 break;
         }
     }
