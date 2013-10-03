@@ -3,7 +3,6 @@ package com.polarnick.col1;
 import android.util.Log;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -77,25 +76,24 @@ public class FieldUpdater implements Runnable {
         int cur = fromPoint;
         while (iterator.hasNext() && cur < toPoint) {
             Point p = iterator.next();
-            if (p.isWasFixed()) {
-                throw new IllegalStateException("We must remove fixed points!");
-            }
-            int dTo = r.nextInt(dIndex.length);
-            int newIndex = updateIndex(p.getIndex(), dTo);
-            for (int i = 0; i < dIndex.length; i++) {
-                if (wasBlocked[updateIndex(newIndex, i)]) {
-                    p.setNowFixed(true);
-                    willBlocked[newIndex] = true;
-                    break;
+            if (!p.isWasFixed()) {
+                int dTo = r.nextInt(dIndex.length);
+                int newIndex = updateIndex(p.getIndex(), dTo);
+                for (int i = 0; i < dIndex.length; i++) {
+                    if (wasBlocked[updateIndex(newIndex, i)]) {
+                        p.setNowFixed(true);
+                        willBlocked[newIndex] = true;
+                        break;
+                    }
                 }
+                --count[p.getIndex()];
+                if (count[p.getIndex()] == 0) {
+                    fieldColour[p.getIndex()] = DrawerThread.BACKGROUND_COLOUR;
+                }
+                ++count[newIndex];
+                fieldColour[newIndex] = DrawerThread.POINT_COLOUR;
+                p.setIndex(newIndex);
             }
-            --count[p.getIndex()];
-            if (count[p.getIndex()] == 0) {
-                fieldColour[p.getIndex()] = DrawerThread.BACKGROUND_COLOUR;
-            }
-            ++count[newIndex];
-            fieldColour[newIndex] = DrawerThread.POINT_COLOUR;
-            p.setIndex(newIndex);
             cur++;
         }
         profiler.out(FieldUpdaterThreadFunctions.updateField5);
